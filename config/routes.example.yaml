@@ -1,0 +1,55 @@
+routes:
+  - name: invoice_lookup
+    description: "Look up invoice details, billing history, payment status, or check when an invoice is due"
+    tool_name: invoice_lookup
+    confidence_threshold: 0.7
+    required_permissions:
+      - billing.read
+    fallback_route: support_ticket
+    metadata:
+      category: billing
+      priority: high
+
+  - name: support_ticket
+    description: "Create a support ticket, report an issue, get help with a problem, or contact support"
+    tool_name: support_ticket
+    confidence_threshold: 0.6
+    required_permissions:
+      - support.read
+    fallback_route: null
+    metadata:
+      category: support
+      priority: medium
+
+  - name: refund_request
+    description: "Request a refund, return a product, cancel an order, or dispute a charge"
+    tool_name: refund_request
+    confidence_threshold: 0.8
+    required_permissions:
+      - billing.write
+      - finance.approve
+    fallback_route: support_ticket
+    metadata:
+      category: billing
+      priority: critical
+
+  - name: policy_question
+    description: "Ask about company policies, refund policy, terms of service, privacy policy, or shipping policy"
+    tool_name: policy_question
+    confidence_threshold: 0.6
+    required_permissions: []
+    fallback_route: null
+    metadata:
+      category: information
+      priority: low
+
+  - name: sales_lead
+    description: "Inquire about products, pricing, enterprise plans, schedule a demo, or talk to sales"
+    tool_name: sales_lead
+    confidence_threshold: 0.65
+    required_permissions:
+      - sales.read
+    fallback_route: null
+    metadata:
+      category: sales
+      priority: high

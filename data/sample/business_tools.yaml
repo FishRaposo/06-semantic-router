@@ -1,0 +1,89 @@
+tools:
+  - name: invoice_lookup
+    description: "Retrieves invoice details from the billing system"
+    input_schema:
+      invoice_id:
+        type: string
+        required: false
+        description: "Invoice identifier"
+      customer_id:
+        type: string
+        required: false
+        description: "Customer identifier"
+    output_schema:
+      invoice_id: string
+      status: string
+      amount: number
+      due_date: string
+
+  - name: support_ticket
+    description: "Creates a support ticket in the helpdesk system"
+    input_schema:
+      subject:
+        type: string
+        required: true
+        description: "Ticket subject"
+      priority:
+        type: string
+        required: false
+        description: "Priority level: low, medium, high, critical"
+    output_schema:
+      ticket_id: string
+      status: string
+      priority: string
+
+  - name: refund_request
+    description: "Initiates a refund request in the billing system"
+    input_schema:
+      order_id:
+        type: string
+        required: true
+        description: "Order to refund"
+      amount:
+        type: number
+        required: false
+        description: "Refund amount"
+      reason:
+        type: string
+        required: false
+        description: "Reason for refund"
+    output_schema:
+      refund_id: string
+      status: string
+      estimated_days: integer
+
+  - name: policy_question
+    description: "Answers questions about company policies"
+    input_schema:
+      question:
+        type: string
+        required: true
+        description: "The policy question"
+      policy_area:
+        type: string
+        required: false
+        description: "Policy area: refund, shipping, privacy, terms"
+    output_schema:
+      question: string
+      answer: string
+      source: string
+
+  - name: sales_lead
+    description: "Captures sales leads and inquiries"
+    input_schema:
+      company:
+        type: string
+        required: false
+        description: "Company name"
+      interest:
+        type: string
+        required: false
+        description: "Product or service of interest"
+      contact_email:
+        type: string
+        required: false
+        description: "Contact email"
+    output_schema:
+      lead_id: string
+      status: string
+      assigned_to: string

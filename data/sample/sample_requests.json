@@ -1,0 +1,122 @@
+[
+  {
+    "query": "What's the status of invoice INV-001?",
+    "expected_route": "invoice_lookup",
+    "expected_confidence": "high",
+    "description": "Direct invoice status query"
+  },
+  {
+    "query": "Can you check my recent billing history?",
+    "expected_route": "invoice_lookup",
+    "expected_confidence": "high",
+    "description": "Billing history request"
+  },
+  {
+    "query": "When is my next payment due?",
+    "expected_route": "invoice_lookup",
+    "expected_confidence": "medium",
+    "description": "Payment due date question"
+  },
+  {
+    "query": "I need help with something, can someone assist me?",
+    "expected_route": "support_ticket",
+    "expected_confidence": "high",
+    "description": "General support request"
+  },
+  {
+    "query": "There's a bug in the dashboard, it keeps crashing",
+    "expected_route": "support_ticket",
+    "expected_confidence": "high",
+    "description": "Bug report"
+  },
+  {
+    "query": "I can't log into my account, please help",
+    "expected_route": "support_ticket",
+    "expected_confidence": "high",
+    "description": "Login issue"
+  },
+  {
+    "query": "I want to return the shoes I bought last week",
+    "expected_route": "refund_request",
+    "expected_confidence": "high",
+    "description": "Product return request"
+  },
+  {
+    "query": "Please cancel my order #ORD-456 and refund the money",
+    "expected_route": "refund_request",
+    "expected_confidence": "high",
+    "description": "Order cancellation with refund"
+  },
+  {
+    "query": "I was charged twice for the same item, I want my money back",
+    "expected_route": "refund_request",
+    "expected_confidence": "high",
+    "description": "Disputed charge"
+  },
+  {
+    "query": "What is your refund policy?",
+    "expected_route": "policy_question",
+    "expected_confidence": "high",
+    "description": "Direct policy question"
+  },
+  {
+    "query": "How long does shipping take?",
+    "expected_route": "policy_question",
+    "expected_confidence": "medium",
+    "description": "Shipping policy question"
+  },
+  {
+    "query": "What are your terms of service?",
+    "expected_route": "policy_question",
+    "expected_confidence": "high",
+    "description": "Terms inquiry"
+  },
+  {
+    "query": "I'd like to schedule a demo of your enterprise plan",
+    "expected_route": "sales_lead",
+    "expected_confidence": "high",
+    "description": "Demo request"
+  },
+  {
+    "query": "Can I get pricing for a team of 50 people?",
+    "expected_route": "sales_lead",
+    "expected_confidence": "high",
+    "description": "Pricing inquiry"
+  },
+  {
+    "query": "Tell me about your product features",
+    "expected_route": "sales_lead",
+    "expected_confidence": "medium",
+    "description": "Product information request"
+  },
+  {
+    "query": "I need something but I'm not sure what",
+    "expected_route": null,
+    "expected_confidence": "low",
+    "description": "Ambiguous request - should trigger clarification"
+  },
+  {
+    "query": "The weather is nice today",
+    "expected_route": null,
+    "expected_confidence": "none",
+    "description": "Off-topic request - should trigger no match"
+  },
+  {
+    "query": "I want to pay my bill and also report a problem with my account",
+    "expected_route": null,
+    "expected_confidence": "ambiguous",
+    "description": "Multi-intent request - should trigger tie or clarification"
+  },
+  {
+    "query": "refund",
+    "expected_route": "refund_request",
+    "expected_confidence": "medium",
+    "description": "Single keyword - partial match"
+  },
+  {
+    "query": "Do you have a privacy policy? Also can I get a refund?",
+    "expected_route": null,
+    "expected_confidence": "ambiguous",
+    "description": "Multi-intent: policy question + refund"
+  }
+]

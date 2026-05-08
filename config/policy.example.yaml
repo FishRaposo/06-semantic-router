@@ -1,0 +1,39 @@
+policy:
+  blocked_routes: []
+
+  permission_map:
+    invoice_lookup:
+      - billing.read
+    support_ticket:
+      - support.read
+    refund_request:
+      - billing.write
+      - finance.approve
+    policy_question: []
+    sales_lead:
+      - sales.read
+
+  approval_required:
+    - route: refund_request
+      condition: "amount > 500"
+      message: "Refunds over $500 require manager approval"
+
+  roles:
+    admin:
+      - billing.read
+      - billing.write
+      - finance.approve
+      - support.read
+      - support.write
+      - sales.read
+      - sales.write
+    agent:
+      - billing.read
+      - support.read
+      - support.write
+      - sales.read
+      - sales.write
+    viewer:
+      - billing.read
+      - support.read
+      - sales.read
