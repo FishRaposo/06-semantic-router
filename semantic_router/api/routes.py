@@ -3,11 +3,11 @@
 from fastapi import APIRouter, HTTPException
 
 from semantic_router.models.route import Route, RouteConfig
-from semantic_router.routing.registry import RouteRegistry
+from semantic_router.routing.shared import get_registry
 
 router = APIRouter()
 
-registry = RouteRegistry()
+registry = get_registry()
 
 
 @router.get("/routes", response_model=list[Route])
@@ -25,3 +25,11 @@ async def register_route(route_config: RouteConfig) -> Route:
     route = Route(**route_config.model_dump())
     registry.register_route(route)
     return route
+
+
+@router.delete("/routes/{name}", status_code=204)
+async def remove_route(name: str) -> None:
+    """Remove a route from the registry."""
+    removed = registry.remove_route(name)
+    if not removed:
+        raise HTTPException(status_code=404, detail=f"Route '{name}' not found")

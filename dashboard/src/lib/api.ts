@@ -40,6 +40,16 @@ export async function registerRoute(config: RouteConfig): Promise<Route> {
   });
 }
 
+export async function deleteRoute(name: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE}/api/v1/routes/${encodeURIComponent(name)}`,
+    { method: "DELETE" }
+  );
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+}
+
 export async function routeRequest(request: RoutingRequest): Promise<RoutingDecision> {
   return fetchApi<RoutingDecision>("/route", {
     method: "POST",

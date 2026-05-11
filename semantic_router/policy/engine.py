@@ -1,11 +1,12 @@
 """Policy engine for evaluating route access and constraints."""
 
-import yaml
 from pathlib import Path
 
+import yaml
 from pydantic import BaseModel, Field
 
 from semantic_router.models.route import Route
+from semantic_router.policy.permissions import PermissionChecker
 
 
 class PolicyDecision(BaseModel):
@@ -29,6 +30,8 @@ class PolicyEngine:
         self._blocked_routes: list[str] = []
         self._permission_map: dict[str, list[str]] = {}
         self._approval_rules: list[dict] = []
+        self._roles: dict[str, list[str]] = {}
+        self._permission_checker = PermissionChecker()
 
     def load_from_yaml(self, path: str | Path) -> None:
         """Load policy rules from a YAML configuration file.
@@ -50,6 +53,7 @@ class PolicyEngine:
         self._blocked_routes = policy.get("blocked_routes", [])
         self._permission_map = policy.get("permission_map", {})
         self._approval_rules = policy.get("approval_required", [])
+        self._roles = policy.get("roles", {})
 
     def evaluate(self, route: Route | None, context: dict) -> PolicyDecision:
         """Evaluate whether a route should be allowed for the given context.
@@ -74,7 +78,14 @@ class PolicyEngine:
         required = self._permission_map.get(route.name, route.required_permissions)
         if required:
             user_perms = set(context.get("user_permissions", []))
-            missing = [p for p in required if p not in user_perms]
+            user_role = context.get("role")
+            if user_role and self._roles:
+                role_perms = self._roles.get(str(user_role), [])
+                user_perms.update(role_perms)
+            missing = [
+                p for p in required
+                if not self._permission_checker.check_permission(list(user_perms), p)
+            ]
             if missing:
                 return PolicyDecision(
                     allowed=False,

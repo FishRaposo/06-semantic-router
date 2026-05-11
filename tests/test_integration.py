@@ -5,12 +5,12 @@ import pytest
 from semantic_router.embedding.service import EmbeddingService
 from semantic_router.execution.adapter import ExecutionAdapter
 from semantic_router.models.request import RoutingRequest
+from semantic_router.models.route import Route
 from semantic_router.policy.engine import PolicyEngine
 from semantic_router.policy.fallback import FallbackHandler
 from semantic_router.routing.registry import RouteRegistry
 from semantic_router.routing.selector import RouteSelector
 from semantic_router.routing.semantic_matcher import SemanticMatcher
-from tests.conftest import sample_routes
 
 
 class IntegrationEmbeddingService:
@@ -67,10 +67,10 @@ class IntegrationEmbeddingService:
 
 
 @pytest.fixture
-def pipeline():
+def pipeline(sample_routes: list[Route]):
     """Set up the full routing pipeline for integration testing."""
     registry = RouteRegistry()
-    for route in sample_routes():
+    for route in sample_routes:
         route.embedding = None
         registry.register_route(route)
 

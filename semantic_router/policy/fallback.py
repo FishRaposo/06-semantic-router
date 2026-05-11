@@ -42,9 +42,15 @@ class FallbackHandler:
             A RoutingDecision with a clarification prompt.
         """
         clarification = self._generate_clarification(request.query, decision.rejected_routes)
-        decision.clarification = clarification
-        decision.fallback_used = True
-        return decision
+        return RoutingDecision(
+            selected_route=decision.selected_route,
+            confidence=decision.confidence,
+            rejected_routes=decision.rejected_routes,
+            policy_check=decision.policy_check,
+            fallback_used=True,
+            clarification=clarification,
+            execution_result=decision.execution_result,
+        )
 
     def handle_policy_block(
         self,
@@ -64,14 +70,18 @@ class FallbackHandler:
         Returns:
             A RoutingDecision indicating the policy block.
         """
-        decision.selected_route = None
-        decision.fallback_used = True
-        decision.policy_check = policy_result
-        decision.clarification = (
-            f"Access denied: {policy_result.reason}. "
-            f"Please contact an administrator if you believe this is an error."
+        return RoutingDecision(
+            selected_route=None,
+            confidence=decision.confidence,
+            rejected_routes=decision.rejected_routes,
+            policy_check=policy_result,
+            fallback_used=True,
+            clarification=(
+                f"Access denied: {policy_result.reason}. "
+                f"Please contact an administrator if you believe this is an error."
+            ),
+            execution_result=decision.execution_result,
         )
-        return decision
 
     def _generate_clarification(
         self, query: str, rejected_routes: list[dict[str, str | float]]

@@ -1,28 +1,61 @@
 """Main routing endpoint that processes user queries."""
 
+import logging
 import time
 
 from fastapi import APIRouter
 
-from semantic_router.embedding.service import EmbeddingService
-from semantic_router.execution.adapter import ExecutionAdapter
-from semantic_router.models.decision import DecisionLog, RoutingDecision
+from semantic_router.db import async_session
+from semantic_router.db.models import DecisionLogModel
+from semantic_router.models.decision import RoutingDecision
 from semantic_router.models.request import RoutingRequest
-from semantic_router.policy.engine import PolicyEngine
-from semantic_router.policy.fallback import FallbackHandler
-from semantic_router.routing.registry import RouteRegistry
-from semantic_router.routing.selector import RouteSelector
-from semantic_router.routing.semantic_matcher import SemanticMatcher
+from semantic_router.routing.shared import (
+    get_embedding_service,
+    get_execution_adapter,
+    get_fallback_handler,
+    get_policy_engine,
+    get_registry,
+    get_selector,
+    get_semantic_matcher,
+)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-registry = RouteRegistry()
-embedding_service = EmbeddingService()
-semantic_matcher = SemanticMatcher(embedding_service)
-selector = RouteSelector()
-policy_engine = PolicyEngine()
-fallback_handler = FallbackHandler()
-execution_adapter = ExecutionAdapter()
+registry = get_registry()
+embedding_service = get_embedding_service()
+semantic_matcher = get_semantic_matcher()
+selector = get_selector()
+policy_engine = get_policy_engine()
+fallback_handler = get_fallback_handler()
+execution_adapter = get_execution_adapter()
+
+
+async def _persist_log(
+    request: RoutingRequest, decision: RoutingDecision, processing_time_ms: int
+) -> None:
+    try:
+        async with async_session() as session:
+            log = DecisionLogModel(
+                request_query=request.query,
+                request_user_id=request.user_id,
+                request_context=request.context,
+                request_metadata=request.metadata,
+                selected_route=decision.selected_route,
+                confidence=decision.confidence,
+                rejected_routes=decision.rejected_routes if decision.rejected_routes else None,
+                policy_check=decision.policy_check.model_dump() if decision.policy_check else None,
+                fallback_used=decision.fallback_used,
+                clarification=decision.clarification,
+                execution_result=(
+                    decision.execution_result.model_dump() if decision.execution_result else None
+                ),
+                processing_time_ms=processing_time_ms,
+            )
+            session.add(log)
+            await session.commit()
+    except Exception:
+        logger.exception("Failed to persist decision log to database")
 
 
 @router.post("/route", response_model=RoutingDecision)
@@ -39,7 +72,9 @@ async def route_request(request: RoutingRequest) -> RoutingDecision:
 
     if decision.selected_route is None:
         processing_time_ms = int((time.perf_counter() - start_time) * 1000)
-        return fallback_handler.handle_low_confidence(request, decision, processing_time_ms)
+        result = fallback_handler.handle_low_confidence(request, decision, processing_time_ms)
+        await _persist_log(request, result, processing_time_ms)
+        return result
 
     policy_result = policy_engine.evaluate(
         route=registry.get_route(decision.selected_route),
@@ -49,7 +84,11 @@ async def route_request(request: RoutingRequest) -> RoutingDecision:
 
     if not policy_result.allowed:
         processing_time_ms = int((time.perf_counter() - start_time) * 1000)
-        return fallback_handler.handle_policy_block(request, decision, policy_result, processing_time_ms)
+        result = fallback_handler.handle_policy_block(
+            request, decision, policy_result, processing_time_ms
+        )
+        await _persist_log(request, result, processing_time_ms)
+        return result
 
     selected_route = registry.get_route(decision.selected_route)
     if selected_route is not None:
@@ -57,10 +96,6 @@ async def route_request(request: RoutingRequest) -> RoutingDecision:
         decision.execution_result = execution_result
 
     processing_time_ms = int((time.perf_counter() - start_time) * 1000)
-    _log = DecisionLog(
-        request=request,
-        decision=decision,
-        processing_time_ms=processing_time_ms,
-    )
+    await _persist_log(request, decision, processing_time_ms)
 
     return decision

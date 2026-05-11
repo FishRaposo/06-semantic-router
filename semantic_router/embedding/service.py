@@ -1,11 +1,32 @@
 """Embedding service supporting OpenAI and sentence-transformers."""
 
+import asyncio
 import hashlib
+import logging
 from typing import Any
 
 import numpy as np
 
 from semantic_router.config import settings
+
+logger = logging.getLogger(__name__)
+
+_fallback_counter: int = 0
+
+
+def get_fallback_count() -> int:
+    """Return the number of times the fallback embedding has been used.
+
+    Returns:
+        The global fallback usage count.
+    """
+    return _fallback_counter
+
+
+def reset_fallback_count() -> None:
+    """Reset the fallback counter to zero."""
+    global _fallback_counter
+    _fallback_counter = 0
 
 
 class EmbeddingService:
@@ -117,7 +138,7 @@ class EmbeddingService:
             if self._st_model is None:
                 self._st_model = SentenceTransformer(self._model_name)
 
-            embedding = self._st_model.encode(text, convert_to_numpy=True)
+            embedding = await asyncio.to_thread(self._st_model.encode, text, convert_to_numpy=True)
             return embedding.tolist()
         except Exception:
             return self._fallback_embedding(text)
@@ -160,7 +181,7 @@ class EmbeddingService:
             if self._st_model is None:
                 self._st_model = SentenceTransformer(self._model_name)
 
-            embeddings = self._st_model.encode(texts, convert_to_numpy=True)
+            embeddings = await asyncio.to_thread(self._st_model.encode, texts, convert_to_numpy=True)
             return embeddings.tolist()
         except Exception:
             return [self._fallback_embedding(t) for t in texts]
@@ -174,6 +195,9 @@ class EmbeddingService:
         Returns:
             A deterministic 384-dimensional pseudo-embedding vector.
         """
+        global _fallback_counter
+        logger.warning("OpenAI embedding failed, using hash-based fallback")
+        _fallback_counter += 1
         dim = 384
         chunks = [text[i:i+16] for i in range(0, max(len(text), 16), 16)]
         embedding: list[float] = []
