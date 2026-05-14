@@ -12,7 +12,6 @@ dependencies = [
     "pydantic-settings>=2.1.0",
     "sqlalchemy[asyncio]>=2.0.25",
     "asyncpg>=0.29.0",
-    "pgvector>=0.2.4",
     "openai>=1.10.0",
     "sentence-transformers>=2.3.0",
     "numpy>=1.26.0",
